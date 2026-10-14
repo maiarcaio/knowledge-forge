@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Knowledge Forge</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="wordmark" href="/">Knowledge Forge</a>
+        <p>Your local evidence library for useful things you find online.</p>
+      </header>
+      <section class="capture" aria-labelledby="capture-title">
+        <div>
+          <p class="kicker">Capture</p>
+          <h1 id="capture-title">Keep the original. Ask better questions later.</h1>
+        </div>
+        <form id="capture-form">
+          <label for="source-url">YouTube or public Instagram link</label>
+          <div class="input-row">
+            <input id="source-url" name="url" type="url" placeholder="https://…" required />
+            <button type="submit">Add to library</button>
+          </div>
+          <p id="capture-status" class="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <section class="workspace" aria-label="Research workspace">
+        <article>
+          <p class="kicker">Find evidence</p>
+          <form id="search-form">
+            <label for="search-query">Search your exact transcript text</label>
+            <input id="search-query" type="search" placeholder="pricing, onboarding, Python…" required />
+            <button type="submit">Search</button>
+          </form>
+          <ol id="search-results" class="evidence-list"></ol>
+        </article>
+        <article>
+          <p class="kicker">Ask with sources</p>
+          <form id="chat-form">
+            <label for="chat-question">Question for your library</label>
+            <textarea id="chat-question" rows="4" placeholder="What did the speaker say about their pricing?" required></textarea>
+            <button type="submit">Ask from evidence</button>
+          </form>
+          <div id="chat-answer" class="answer" aria-live="polite"></div>
+        </article>
+      </section>
+      <footer>Raw sources stay on this computer. AI answers are derived artifacts with citations.</footer>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

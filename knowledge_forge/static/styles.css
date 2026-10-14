@@ -1,0 +1,16 @@
+:root { --paper:#e8f0f5; --ink:#102635; --muted:#5b7180; --line:#b9c8d2; --blue:#2452d6; --pale:#f7fbfd; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; }
+main { width:min(1100px, calc(100% - 2.5rem)); margin:auto; }
+header { display:flex; justify-content:space-between; align-items:baseline; padding:2rem 0; border-bottom:1px solid var(--line); gap:2rem; }
+.wordmark { color:var(--ink); font-family: Georgia, serif; font-size:1.5rem; text-decoration:none; }
+header p, footer, .status { color:var(--muted); }
+.capture { display:grid; grid-template-columns:1.1fr 1fr; gap:4rem; padding:5rem 0; border-bottom:1px solid var(--line); }
+.kicker { color:var(--blue); font-weight:700; margin:0 0 .6rem; }
+h1 { max-width:13ch; font-family:Georgia, serif; font-size:clamp(2.3rem, 5vw, 4.6rem); font-weight:500; letter-spacing:-.04em; line-height:.98; margin:0; }
+form { display:grid; gap:.7rem; align-content:start; } label { font-weight:650; } input, textarea { width:100%; border:1px solid var(--line); background:var(--pale); color:var(--ink); padding:.85rem; border-radius:0; font:inherit; }
+.input-row { display:flex; gap:.6rem; } button { background:var(--blue); border:1px solid var(--blue); color:white; cursor:pointer; font:inherit; font-weight:700; padding:.85rem 1.1rem; white-space:nowrap; } button:hover { background:#183da9; }
+.workspace { display:grid; grid-template-columns:1fr 1fr; gap:3rem; padding:3.5rem 0; } .workspace article + article { border-left:1px solid var(--line); padding-left:3rem; }
+.evidence-list { padding:0; list-style:none; } .evidence-list li { border-top:1px solid var(--line); padding:1rem 0; } .evidence-list a { color:var(--blue); font-weight:700; } .answer { border-top:1px solid var(--line); margin-top:1.2rem; padding-top:1rem; } .answer p { line-height:1.6; } .answer ul { padding-left:1.2rem; }
+footer { border-top:1px solid var(--line); padding:1.5rem 0 3rem; font-size:.9rem; }
+@media (max-width:720px) { main{width:min(100% - 1.5rem, 1100px)} header,.capture,.workspace{display:block} header p{margin-top:.6rem}.capture{padding:3rem 0}.capture form{margin-top:2rem}.workspace article + article{border-left:0;border-top:1px solid var(--line);padding:2rem 0 0;margin-top:2rem}.input-row{display:block}.input-row button{margin-top:.6rem;width:100%} }

@@ -1,0 +1,8 @@
+{
+  "source": "synthetic-public-safe-fixture",
+  "chunks": [
+    {"start_seconds": 73, "end_seconds": 78, "text": "Pricing started at $49."},
+    {"start_seconds": 142, "end_seconds": 148, "text": "The first customers came from founder-led demos."},
+    {"start_seconds": 311, "end_seconds": 317, "text": "We replaced a long onboarding form with three questions."}
+  ]
+}
