@@ -69,3 +69,20 @@ def test_ingest_endpoint_processes_youtube_source_with_the_configured_adapter(tm
 
     assert response.status_code == 200
     assert response.json()["status"] == "ready"
+
+
+def test_export_endpoint_returns_portable_markdown(tmp_path) -> None:
+    app = create_app(tmp_path)
+    client = TestClient(app)
+    source = client.post("/api/sources", json={"url": "https://youtu.be/abc123XYZ09"}).json()
+    app.state.library.store_transcript(
+        source["id"],
+        raw={"origin": "fixture"},
+        chunks=[TranscriptChunkInput(start_seconds=73, end_seconds=78, text="Pricing started at $49.")],
+    )
+
+    response = client.get(f"/api/sources/{source['id']}/export.md")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/markdown")
+    assert "[01:13](https://www.youtube.com/watch?v=abc123XYZ09&t=73s)" in response.text

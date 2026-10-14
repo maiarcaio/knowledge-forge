@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -86,6 +86,14 @@ def create_app(
         if not source:
             raise HTTPException(status_code=404, detail="Source not found")
         return _source_payload(source)
+
+    @app.get("/api/sources/{source_id}/export.md")
+    def export_source(source_id: str) -> Response:
+        try:
+            markdown = app.state.library.export_markdown(source_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Source not found") from error
+        return Response(content=markdown, media_type="text/markdown")
 
     @app.post("/api/sources/{source_id}/ingest")
     def ingest_source(source_id: str) -> dict[str, str | None]:
