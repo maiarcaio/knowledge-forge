@@ -1,20 +1,50 @@
 # Knowledge Forge
 
-Knowledge Forge is a local-first, evidence-grounded library for useful YouTube and Instagram sources. It saves the original source record and timestamped transcript evidence locally, then returns citations with every AI answer.
+**Local-first evidence retrieval and grounded AI-assisted answers — Python, FastAPI, SQLite FTS5.**
 
-## What works now
+[![Python checks](https://github.com/maiarcaio/knowledge-forge/actions/workflows/python-tests.yml/badge.svg)](https://github.com/maiarcaio/knowledge-forge/actions/workflows/python-tests.yml)
 
-- Paste a public YouTube or Instagram URL into one inbox.
-- Normalize URLs and prevent duplicate saves.
-- Retrieve publicly available YouTube captions with `youtube-transcript-api`.
-- Preserve the caption response locally and index timestamped transcript chunks with SQLite FTS5.
-- Search exact transcript evidence and export it as portable Markdown.
-- Ask an OpenAI-compatible model questions using only retrieved local evidence; use evidence-only mode until an API key is configured.
-- Create collections through the API.
+An independent engineering project that stores source references and available YouTube captions, searches transcript passages and returns timestamp-linked supporting evidence. An optional OpenAI-compatible model can answer questions using the retrieved excerpts; without a configured provider, the application remains useful in **evidence-only mode**.
 
-Instagram links are stored honestly as sources. Automated Reel transcription or saved-post synchronization is intentionally not implemented: it needs a separate, permission-aware feasibility decision.
+**Why I built it:** Research and learning often produce notes that lose the exact original source. Knowledge Forge preserves source context so an answer can be checked against the material it came from.
+
+## See the engineering work
+
+| Capability | Current implementation |
+| --- | --- |
+| API and validation | FastAPI routes with Pydantic requests |
+| Persistence | SQLite source/collection records, caption chunks and FTS5 text index |
+| Ingestion | YouTube caption adapter when captions are publicly available; canonical URL deduplication |
+| Retrieval | SQLite FTS5 full-text search, with timestamped source links |
+| Answer generation | Optional OpenAI-compatible API; no provider key required for evidence-only mode |
+| Export | Markdown export for stored source evidence |
+| Verification | pytest + GitHub Actions Python 3.12 install-and-test checks |
+
+**Implementation:** [API](knowledge_forge/app.py) · [Storage/search](knowledge_forge/library.py) · [Answer/citations](knowledge_forge/chat.py) · [Tests](tests/) · [Evaluation protocol](docs/EVALUATION.md)
+
+**Scope and limits:** This is a working **local prototype**, not a deployed production service. Semantic embeddings, hybrid/vector retrieval, a completed benchmark, automatic Instagram transcription and sync are **not implemented**. Linked timestamps make evidence inspectable, but do not independently prove factual grounding or answer correctness.
+
+## How it works
+
+```mermaid
+flowchart LR
+  A[Source URL] --> B[Canonical source record]
+  B --> C[YouTube caption adapter]
+  C --> D[Raw caption archive]
+  C --> E[SQLite chunks and FTS5]
+  E --> F[Timestamped evidence search]
+  F --> G{Model configured?}
+  G -->|No| H[Evidence-only response]
+  G -->|Yes| I[Evidence-constrained answer]
+  H --> J[Source citations]
+  I --> J
+```
+
+Instagram URLs can be stored as source records, but their content is not automatically extracted. See [Instagram feasibility notes](docs/INSTAGRAM_FEASIBILITY.md).
 
 ## Run locally
+
+**Prerequisite:** Python 3.12+.
 
 ```bash
 python3 -m venv .venv
@@ -24,43 +54,49 @@ set -a; source .env; set +a
 .venv/bin/uvicorn knowledge_forge.app:app --reload
 ```
 
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Local data is written to `data/`, which Git ignores.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) for the local interface and [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for FastAPI's interactive API reference.
 
-## API
+A basic local workflow is: save a public YouTube URL, run caption ingestion if captions are available, search for a phrase, open the timestamped source, and optionally ask a question. External caption availability may vary.
 
-- `POST /api/sources` — save a URL.
-- `POST /api/sources/{id}/ingest` — attempt caption ingestion for YouTube.
-- `GET /api/sources/{id}` — inspect one source.
-- `GET /api/search?q=...` — retrieve timestamped evidence.
-- `POST /api/chat` — ask a grounded question.
-- `POST /api/collections` — create a project/topic collection.
+Local data is written under `data/`, which is Git-ignored.
 
-## Architecture
+## Selected API endpoints
 
-```text
-URL inbox → canonical source record → platform adapter → raw transcript on disk
-                                           ↓
-                                  SQLite metadata + FTS5 chunks
-                                           ↓
-                         retrieval → optional model → cited answer
-```
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/sources` | Register a source URL |
+| `POST /api/sources/{id}/ingest` | Attempt YouTube caption ingestion; return a manual/permission-aware next step for Instagram |
+| `GET /api/sources/{id}` | Inspect saved source metadata |
+| `GET /api/sources/{id}/export.md` | Export source evidence as Markdown |
+| `GET /api/search?q=...` | Find matching timestamped evidence |
+| `POST /api/chat` | Return an answer and supporting citations |
+| `POST /api/collections` | Create a source collection |
 
-The current retrieval path is exact full-text search. LanceDB is included as the planned vector-store dependency; semantic embeddings are deliberately the next increment, after the evaluation corpus proves the lexical evidence path.
-
-## Privacy and portfolio boundaries
-
-The repository must contain only original code, synthetic/public fixtures, and documentation. Never commit `data/`, `.env`, account cookies, private transcripts, downloaded protected media, or provider keys. Read [PRIVACY.md](PRIVACY.md) before adding connectors.
-
-## Verification
+## Testing and reproducibility
 
 ```bash
 .venv/bin/python -m pytest
 .venv/bin/ruff check .
 ```
 
-## Next milestones
+**Verified GitHub Actions run:** [Python checks — October 29, 2026](https://github.com/maiarcaio/knowledge-forge/actions/runs/40865502016) completed successfully. The workflow executes dependency installation and the deterministic pytest suite on Python 3.12. Ruff is available in the development dependency set, but is not yet a blocking CI step.
 
-1. Add a local/vector embedding adapter and hybrid ranker backed by LanceDB.
-2. Create the evaluation corpus and cited-answer benchmark.
-3. Add user-permitted media upload plus local Whisper fallback.
-4. Run the Instagram saved-content feasibility study before considering sync.
+These checks validate local application behavior. They do not measure live caption availability, LLM answer quality or deployment reliability. The [evaluation protocol](docs/EVALUATION.md) specifies a future manual factual-citation benchmark; scores have not yet been established.
+
+## Architecture and safety decisions
+
+- **Evidence before generation:** retain local source data and transcript excerpts rather than treating model output as the system of record.
+- **Retrieval baseline first:** start with exact lexical search, then add semantic/hybrid retrieval only after comparing it on a reproducible evaluation set.
+- **Provider isolation:** the optional model receives selected retrieved evidence through an OpenAI-compatible adapter, not the entire local source library.
+- **Privacy-aware scope:** this repository contains original code, public/synthetic fixtures and docs—not private transcripts or user credentials.
+
+Read [PRIVACY.md](PRIVACY.md) before adding connectors. Do not commit `data/`, `.env`, cookies, provider keys or protected media.
+
+## Next engineering milestones
+
+1. Build a reproducible question-and-evidence benchmark and record successes, errors and citation misses.
+2. Compare SQLite FTS5 baseline with a small semantic/hybrid retrieval adapter.
+3. Add tracing and cost/latency measurements where applicable.
+4. Consider user-permitted media upload/transcription after privacy and rights review.
+
+**Authorship:** independent project by [@maiarcaio](https://github.com/maiarcaio). Coursework projects and collaborative applications are documented separately in [my portfolio](https://github.com/maiarcaio).
